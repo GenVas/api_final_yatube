@@ -6,11 +6,12 @@ from rest_framework.relations import SlugRelatedField
 from posts.models import Comment, CommentPost, Group, Post, Follow
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer): # сделать наследование для вывода в зависимости от action
     post = serializers.SlugRelatedField(read_only=True, slug_field='pk')
     author = serializers.SlugRelatedField(read_only=True, slug_field='username')
 
     class Meta:
+
         fields = '__all__'
         model = Comment
 
@@ -18,25 +19,33 @@ class CommentSerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
     # text = CharField(required=True)
-    comments = CommentSerializer(many=True, required=False)
+    # comments = CommentSerializer(many=True, required=False)
 
     class Meta:
         fields = '__all__'
         model = Post
 
-    def create(self, validated_data):
-        if 'comments' not in self.initial_data:
-            post = Post.objects.create(**validated_data)
-            return post
-        else:
-            comments = validated_data.pop('comments')
-            post = Post.objects.create(**validated_data)
-            for comment in comments:
-                current_comment, status = Comment.objects.get_or_create(
-                    **comments)
-                CommentPost.objects.create(
-                    comment=current_comment, post=post)
-            return post
+    # def create(self, validated_data):
+    #     if 'comments' not in self.initial_data:
+    #         post = Post.objects.create(**validated_data)
+    #         return post
+    #     else:
+    #         comments = validated_data.pop('comments')
+    #         post = Post.objects.create(**validated_data)
+    #         for comment in comments:
+    #             current_comment, status = Comment.objects.get_or_create(
+    #                 **comments)
+    #             CommentPost.objects.create(
+    #                 comment=current_comment, post=post)
+    #         return post
+
+
+class PostSerializerPOST(PostSerializer):
+    author = SlugRelatedField(slug_field='username', read_only=True)
+
+    class Meta:
+        exclude = ['id', 'pub_date']
+        model = Post
 
 
 class GroupSerializer(serializers.ModelSerializer):
