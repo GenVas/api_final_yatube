@@ -1,14 +1,18 @@
+
 from rest_framework import serializers
-from rest_framework.fields import CharField
 from rest_framework.relations import SlugRelatedField
 
+from posts.models import Comment, Group, Post, Follow, User
 
-from posts.models import Comment, CommentPost, Group, Post, Follow
+
+NO_SELF_SUBSCRIPTION_MESSAGE = 'Нельзя подписаться на самого себя'
+ALREADY_SUBSCRIBED_MESSAGE = 'Вы уже подписаны'
 
 
-class CommentSerializer(serializers.ModelSerializer): # сделать наследование для вывода в зависимости от action
+class CommentSerializer(serializers.ModelSerializer):
     post = serializers.SlugRelatedField(read_only=True, slug_field='pk')
-    author = serializers.SlugRelatedField(read_only=True, slug_field='username')
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username')
 
     class Meta:
 
@@ -18,26 +22,10 @@ class CommentSerializer(serializers.ModelSerializer): # сделать насл�
 
 class PostSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True)
-    # text = CharField(required=True)
-    # comments = CommentSerializer(many=True, required=False)
 
     class Meta:
         fields = '__all__'
         model = Post
-
-    # def create(self, validated_data):
-    #     if 'comments' not in self.initial_data:
-    #         post = Post.objects.create(**validated_data)
-    #         return post
-    #     else:
-    #         comments = validated_data.pop('comments')
-    #         post = Post.objects.create(**validated_data)
-    #         for comment in comments:
-    #             current_comment, status = Comment.objects.get_or_create(
-    #                 **comments)
-    #             CommentPost.objects.create(
-    #                 comment=current_comment, post=post)
-    #         return post
 
 
 class PostSerializerPOST(PostSerializer):
@@ -55,6 +43,24 @@ class GroupSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    following = serializers.SlugRelatedField(
+        slug_field='username', queryset=User.objects.all()
+    )
+    user = serializers.SlugRelatedField(
+        slug_field='username', queryset=User.objects.all(),
+        default=serializers.CurrentUserDefault()
+    )
+
     class Meta:
         model = Follow
         fields = '__all__'
+
+    def validate(self, data):
+        user = self.context['request'].user
+        following = data['following']
+        if (self.context['request'].method == 'POST'
+                and user == following):
+            raise serializers.ValidationError(NO_SELF_SUBSCRIPTION_MESSAGE)
+        if Follow.objects.filter(user=user, following=following).exists():
+            raise serializers.ValidationError(ALREADY_SUBSCRIBED_MESSAGE)
+        return data

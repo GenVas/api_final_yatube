@@ -20,6 +20,7 @@ INSTALLED_APPS = [
     'djoser',
     'rest_framework.authtoken',
     'drf_yasg',
+    'django_filters',
     'api',
     'posts',
 ]
@@ -100,11 +101,13 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication'
     ],
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%SZ",
 }
 
 SIMPLE_JWT = {
     # Устанавливаем срок жизни токена
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=20),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=20),
+    'AUTH_HEADER_TYPES': ('Bearer',),
 }

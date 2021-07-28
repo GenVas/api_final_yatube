@@ -3,6 +3,9 @@ from django.db import models
 
 User = get_user_model()
 
+ADDING_DATE = 'Дата добавления'
+PUBLICATION_DATE = 'Дата публикации'
+
 
 class Group(models.Model):
 
@@ -19,16 +22,18 @@ class Group(models.Model):
 
 class Post(models.Model):
     text = models.TextField()
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    pub_date = models.DateTimeField(PUBLICATION_DATE, auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='posts')
     image = models.ImageField(
         upload_to='posts/', null=True, blank=True)
-    group = models.ForeignKey(Group, on_delete=models.SET_NULL, related_name='posts', blank=True, null=True)
-    
+    group = models.ForeignKey(
+        Group, on_delete=models.SET_NULL,
+        related_name='posts', blank=True, null=True)
+
     class Meta:
         ordering = ['-pub_date']
-    
+
     def __str__(self):
         return self.text
 
@@ -40,29 +45,20 @@ class Comment(models.Model):
         Post, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
     created = models.DateTimeField(
-        'Дата добавления', auto_now_add=True, db_index=True)
+        ADDING_DATE, auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['-created']
 
-# В проекте должна быть описана модель Follow,
-# в ней должно быть два поля — user (кто подписан) и following (на кого подписан).
-# Для этой модели в документации уже описан эндпоинт /follow/ и два метода:
-
 
 class Follow(models.Model):
-    follower = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="follower") # (кто подписан)
-    following = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name="following") # (на кого подписан)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="follower")
+    following = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="following")
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['following', 'follower'], name='unique_follow')
+            models.UniqueConstraint(
+                fields=['user', 'following'], name='unique_follow')
         ]
-
-
-class CommentPost(models.Model):
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.comment} {self.post}'
