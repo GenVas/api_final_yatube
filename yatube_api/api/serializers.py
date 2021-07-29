@@ -1,4 +1,3 @@
-
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -28,15 +27,8 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
 
 
-class PostSerializerPOST(PostSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
-
-    class Meta:
-        exclude = ['id', 'pub_date']
-        model = Post
-
-
 class GroupSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Group
         fields = '__all__'
@@ -58,8 +50,7 @@ class FollowSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         following = data['following']
-        if (self.context['request'].method == 'POST'
-                and user == following):
+        if user == following:
             raise serializers.ValidationError(NO_SELF_SUBSCRIPTION_MESSAGE)
         if Follow.objects.filter(user=user, following=following).exists():
             raise serializers.ValidationError(ALREADY_SUBSCRIBED_MESSAGE)

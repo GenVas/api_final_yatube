@@ -3,8 +3,11 @@ from django.db import models
 
 User = get_user_model()
 
-ADDING_DATE = 'Дата добавления'
-PUBLICATION_DATE = 'Дата публикации'
+ADDING_DATE, PUBLICATION_DATE = 'Дата добавления', 'Дата публикации'
+COMMENT_VERBOSE, COMMENTS_VERBOSE = "Комментарий", "Комментарии"
+FOLLOW_VERBOSE, FOLLOWS_VERBOSE = "Подписка", "Подписки"
+GROUP_VERBOSE, GROUPS_VERBOSE = "Группа", "Группы"
+POST_VERBOSE, POSTS_VERBOSE = "Подписка", "Подписки"
 
 
 class Group(models.Model):
@@ -15,6 +18,8 @@ class Group(models.Model):
 
     class Meta:
         ordering = ['title']
+        verbose_name = GROUP_VERBOSE
+        verbose_name_plural = GROUPS_VERBOSE
 
     def __str__(self):
         return self.title
@@ -33,9 +38,12 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['-pub_date']
+        verbose_name = POST_VERBOSE
+        verbose_name_plural = POSTS_VERBOSE
 
     def __str__(self):
-        return self.text
+        return (f"автор: {self.author.username}, группа: {self.group}, "
+                f"дата: {self.pub_date}, текст:{self.text[:15]}.")
 
 
 class Comment(models.Model):
@@ -49,6 +57,8 @@ class Comment(models.Model):
 
     class Meta:
         ordering = ['-created']
+        verbose_name = COMMENT_VERBOSE
+        verbose_name_plural = COMMENTS_VERBOSE
 
 
 class Follow(models.Model):
@@ -58,6 +68,9 @@ class Follow(models.Model):
         User, on_delete=models.CASCADE, related_name="following")
 
     class Meta:
+        ordering = ['following']
+        verbose_name = FOLLOW_VERBOSE
+        verbose_name_plural = FOLLOWS_VERBOSE
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'following'], name='unique_follow')
