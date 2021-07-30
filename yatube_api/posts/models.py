@@ -3,12 +3,6 @@ from django.db import models
 
 User = get_user_model()
 
-ADDING_DATE, PUBLICATION_DATE = 'Дата добавления', 'Дата публикации'
-COMMENT_VERBOSE, COMMENTS_VERBOSE = "Комментарий", "Комментарии"
-FOLLOW_VERBOSE, FOLLOWS_VERBOSE = "Подписка", "Подписки"
-GROUP_VERBOSE, GROUPS_VERBOSE = "Группа", "Группы"
-POST_VERBOSE, POSTS_VERBOSE = "Подписка", "Подписки"
-
 
 class Group(models.Model):
 
@@ -18,8 +12,6 @@ class Group(models.Model):
 
     class Meta:
         ordering = ['title']
-        verbose_name = GROUP_VERBOSE
-        verbose_name_plural = GROUPS_VERBOSE
 
     def __str__(self):
         return self.title
@@ -27,7 +19,7 @@ class Group(models.Model):
 
 class Post(models.Model):
     text = models.TextField()
-    pub_date = models.DateTimeField(PUBLICATION_DATE, auto_now_add=True)
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='posts')
     image = models.ImageField(
@@ -36,14 +28,20 @@ class Post(models.Model):
         Group, on_delete=models.SET_NULL,
         related_name='posts', blank=True, null=True)
 
+    STRING_METHOD_MESSAGE = (
+        "автор: {user}, группа: {group}, "
+        "дата: {date}, текст:{text}."
+    )
+
     class Meta:
         ordering = ['-pub_date']
-        verbose_name = POST_VERBOSE
-        verbose_name_plural = POSTS_VERBOSE
 
     def __str__(self):
-        return (f"автор: {self.author.username}, группа: {self.group}, "
-                f"дата: {self.pub_date}, текст:{self.text[:15]}.")
+        self.STRING_METHOD_MESSAGE.format(
+            user=self.author.username,
+            group=self.group,
+            date=self.pub_date,
+            text=self.text[:15])
 
 
 class Comment(models.Model):
@@ -53,12 +51,10 @@ class Comment(models.Model):
         Post, on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
     created = models.DateTimeField(
-        ADDING_DATE, auto_now_add=True, db_index=True)
+        'Дата добавления', auto_now_add=True, db_index=True)
 
     class Meta:
         ordering = ['-created']
-        verbose_name = COMMENT_VERBOSE
-        verbose_name_plural = COMMENTS_VERBOSE
 
 
 class Follow(models.Model):
@@ -68,9 +64,7 @@ class Follow(models.Model):
         User, on_delete=models.CASCADE, related_name="following")
 
     class Meta:
-        ordering = ['following']
-        verbose_name = FOLLOW_VERBOSE
-        verbose_name_plural = FOLLOWS_VERBOSE
+        ordering = ['-id', 'following']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'following'], name='unique_follow')
