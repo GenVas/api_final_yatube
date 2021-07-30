@@ -50,13 +50,13 @@ class FollowSerializer(serializers.ModelSerializer):
         validators = [
             UniqueTogetherValidator(
                 queryset=Follow.objects.all(),
-                fields=['following', 'user']
+                fields=['following', 'user'],
+                message=ALREADY_SUBSCRIBED_MESSAGE
             )
         ]
 
     def validate(self, data):
-        user = self.context['request'].user
-        following = data['following']
-        if (self.context['request'].method == 'POST' and user == following):
+        if (self.context['request'].method == 'POST'
+                and self.context['request'].user == data['following']):
             raise serializers.ValidationError(NO_SELF_SUBSCRIPTION_MESSAGE)
         return data
