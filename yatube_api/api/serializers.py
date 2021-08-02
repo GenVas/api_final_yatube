@@ -55,8 +55,17 @@ class FollowSerializer(serializers.ModelSerializer):
             )
         ]
 
+    # lazy evaluation technique
+    # def validate(self, data):
+    #     if (self.context['request'].method == 'POST'
+    #             and self.context['request'].user == data['following']):
+    #         raise serializers.ValidationError(NO_SELF_SUBSCRIPTION_MESSAGE)
+    #     return data
+
+    # bloack guard technique
     def validate(self, data):
-        if (self.context['request'].method == 'POST'
-                and self.context['request'].user == data['following']):
+        if self.context['request'].method != 'POST':
+            return data
+        if self.context['request'].user == data['following']:
             raise serializers.ValidationError(NO_SELF_SUBSCRIPTION_MESSAGE)
         return data
